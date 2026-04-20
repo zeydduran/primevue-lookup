@@ -140,6 +140,7 @@ function onComplete(event: { query: string }): void {
         :delay="0"
         :min-length="0"
         :force-selection="true"
+        appendTo="self"
         :show-clear="true"
         :invalid="invalid"
         dropdown
