@@ -2,6 +2,13 @@ export { default as LookupSelect } from './components/LookupSelect.vue'
 export { useLookup } from './composables/useLookup'
 export type { UseLookupConfig } from './composables/useLookup'
 export { createDefaultLookupFetcher, defaultLookupFetcher } from './fetchers/defaultLookupFetcher'
+export {
+    registerLookupHttpClient,
+    resolveLookupHttpClient,
+    hasLookupHttpClient,
+    resetLookupHttpClient,
+} from './http-client'
+export type { LookupHttpClient, LookupHttpRequestConfig, LookupHttpResponse } from './http-client'
 export type {
     LookupFetcher,
     LookupFetcherParams,

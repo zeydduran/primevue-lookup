@@ -1,4 +1,5 @@
 import { buildLookupQuery } from '../utils/buildLookupQuery'
+import { resolveLookupHttpClient } from '../http-client'
 import type { LookupFetcher, LookupResponse } from '../types/lookup'
 
 function isLookupResponse(value: unknown): value is LookupResponse {
@@ -14,27 +15,17 @@ function isLookupResponse(value: unknown): value is LookupResponse {
 }
 
 export function createDefaultLookupFetcher(
-    requestInit?: Omit<RequestInit, 'signal' | 'body' | 'method'>,
+    requestInit?: Record<string, unknown>,
 ): LookupFetcher {
     return async (params) => {
         const query = buildLookupQuery(params)
-        const url = `${params.endpoint.replace(/\/$/, '')}${query}`
-
-        const response = await fetch(url, {
+        const path = `${params.endpoint.replace(/^\//, '')}${query}`
+        const client = resolveLookupHttpClient()
+        const response = await client.get<LookupResponse>(path, {
             ...requestInit,
-            method: 'GET',
-            headers: {
-                Accept: 'application/json',
-                ...(requestInit?.headers ?? {}),
-            },
             signal: params.signal,
         })
-
-        if (!response.ok) {
-            throw new Error(`Lookup isteği başarısız: HTTP ${response.status}`)
-        }
-
-        const json: unknown = await response.json()
+        const json: unknown = response.data
 
         if (!isLookupResponse(json)) {
             throw new Error('Lookup yanıtı beklenen formatta değil.')
