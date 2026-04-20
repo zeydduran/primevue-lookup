@@ -34,6 +34,9 @@ const props = withDefaults(
 const attrs = useAttrs()
 
 const modelValue = defineModel<LookupPrimitive | LookupPrimitive[] | null>({ default: null })
+const emit = defineEmits<{
+    (e: 'selection-meta', payload: LookupOption[]): void
+}>()
 
 const lookup = useLookup({
     endpoint: props.endpoint,
@@ -72,18 +75,21 @@ const autoCompleteModel = computed<LookupOption | LookupOption[] | null>({
             const options = raw.filter(isLookupOption)
             lookup.hydrateSelected(options)
             modelValue.value = options.map((option) => option.value)
+            emit('selection-meta', options)
 
             return
         }
 
         if (value === null || !isLookupOption(value)) {
             modelValue.value = null
+            emit('selection-meta', [])
 
             return
         }
 
         lookup.hydrateSelected([value])
         modelValue.value = value.value
+        emit('selection-meta', [value])
     },
 })
 
