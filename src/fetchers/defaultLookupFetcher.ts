@@ -1,6 +1,6 @@
-import axios, { AxiosError, type AxiosRequestConfig } from 'axios'
 import { buildLookupQuery } from '../utils/buildLookupQuery'
 import type { LookupFetcher, LookupResponse } from '../types/lookup'
+import { resolveLookupHttpClient } from '../http-client'
 
 function isLookupResponse(value: unknown): value is LookupResponse {
     if (value === null || typeof value !== 'object') {
@@ -15,27 +15,28 @@ function isLookupResponse(value: unknown): value is LookupResponse {
 }
 
 export function createDefaultLookupFetcher(
-    axiosConfig?: Omit<AxiosRequestConfig, 'url' | 'method' | 'params' | 'signal'>,
+    requestConfig?: Record<string, unknown>,
 ): LookupFetcher {
     return async (params) => {
         const query = buildLookupQuery(params)
         const endpoint = params.endpoint.replace(/\/$/, '')
         const url = `${endpoint}${query}`
+        const httpClient = resolveLookupHttpClient()
 
         let json: unknown
         try {
-            const response = await axios.get<LookupResponse>(url, {
-                ...axiosConfig,
+            const response = await httpClient.get<LookupResponse>(url, {
+                ...requestConfig,
                 signal: params.signal,
                 headers: {
                     Accept: 'application/json',
-                    ...(axiosConfig?.headers ?? {}),
+                    ...((requestConfig?.headers as Record<string, string | number | boolean> | undefined) ?? {}),
                 },
             })
             json = response.data
         } catch (error) {
-            if (error instanceof AxiosError) {
-                const status = error.response?.status
+            if (typeof error === 'object' && error !== null) {
+                const status = Number((error as { response?: { status?: number } }).response?.status)
                 if (status) {
                     throw new Error(`Lookup isteği başarısız: HTTP ${status}`)
                 }
